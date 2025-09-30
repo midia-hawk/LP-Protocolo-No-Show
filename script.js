@@ -50,12 +50,23 @@ function createFloatingDots() {
 function initFormHandling() {
   const form = document.getElementById("contactForm")
   const phoneInput = form.querySelector('input[name="telefone"]')
+  const instagramInput = form.querySelector('input[name="instagram"]')
 
-  // Phone mask
+  // Phone mask - limit to Brazilian format
   phoneInput.addEventListener("input", (e) => {
     let value = e.target.value.replace(/\D/g, "")
-    if (value.length >= 11) {
+    
+    // Limit to 11 digits (Brazilian mobile) or 10 digits (landline)
+    if (value.length > 11) {
+      value = value.slice(0, 11)
+    }
+    
+    if (value.length === 11) {
+      // Mobile format: (XX) XXXXX-XXXX
       value = value.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3")
+    } else if (value.length === 10) {
+      // Landline format: (XX) XXXX-XXXX
+      value = value.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3")
     } else if (value.length >= 7) {
       value = value.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3")
     } else if (value.length >= 3) {
@@ -63,9 +74,31 @@ function initFormHandling() {
     }
     e.target.value = value
   })
+  
+  // Instagram mask - ensure @ at beginning
+  instagramInput.addEventListener("input", (e) => {
+    let value = e.target.value
+    
+    // Remove any @ symbols
+    value = value.replace(/@/g, "")
+    
+    // Add @ at the beginning if there's content
+    if (value.length > 0) {
+      value = "@" + value
+    }
+    
+    e.target.value = value
+  })
+  
+  // Handle backspace on Instagram field
+  instagramInput.addEventListener("keydown", (e) => {
+    if (e.key === "Backspace" && e.target.value === "@") {
+      e.target.value = ""
+    }
+  })
 
   // Form submission
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault()
 
     const formData = new FormData(form)
@@ -80,12 +113,31 @@ function initFormHandling() {
     data.utm_content = urlParams.get("utm_content") || ""
     data.fbclid = urlParams.get("fbclid") || ""
 
-    // Here you would send the data to your webhook
-    console.log("Form data with UTM and fbclid:", data)
+    // Add timestamp
+    data.timestamp = new Date().toISOString()
+    data.page_url = window.location.href
 
-    // Show success message
-    alert("Obrigado! Entraremos em contato em breve para seu diagnóstico gratuito.")
-    form.reset()
+    try {
+      // Send data to webhook
+      const response = await fetch("https://hook.eu2.make.com/f39tgos30th69a0gwtqtc5t32784fnbg", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      })
+
+      if (response.ok) {
+        // Show success message
+        alert("Obrigado! Entraremos em contato em breve para seu diagnóstico gratuito.")
+        form.reset()
+      } else {
+        throw new Error("Erro no envio")
+      }
+    } catch (error) {
+      console.error("Erro ao enviar formulário:", error)
+      alert("Ocorreu um erro ao enviar o formulário. Tente novamente.")
+    }
   })
 }
 
