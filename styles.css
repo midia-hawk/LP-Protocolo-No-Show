@@ -1264,3 +1264,38 @@ html {
     min-width: 50%;
   }
 }
+
+/* Hero Profile Image */
+.hero-profile-image {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  filter: drop-shadow(0 0 30px rgba(0, 212, 255, 0.6));
+  transition: all 0.3s ease;
+  animation: heroGlow 3s ease-in-out infinite alternate;
+}
+
+.hero-profile-image:hover {
+  filter: drop-shadow(0 0 50px rgba(0, 212, 255, 0.8));
+  transform: scale(1.05);
+}
+
+@keyframes heroGlow {
+  0% {
+    filter: drop-shadow(0 0 30px rgba(0, 212, 255, 0.6));
+  }
+  100% {
+    filter: drop-shadow(0 0 40px rgba(0, 212, 255, 0.9));
+  }
+}
+
+/* Hide old profile circle */
+.profile-circle {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .hero-profile-image {
+    max-width: 300px;
+  }
+}
