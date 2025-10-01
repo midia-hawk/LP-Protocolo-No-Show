@@ -51,6 +51,92 @@ function initFormHandling() {
   const form = document.getElementById("contactForm")
   const phoneInput = form.querySelector('input[name="telefone"]')
   const instagramInput = form.querySelector('input[name="instagram"]')
+  const emailInput = form.querySelector('input[name="email"]')
+
+  // Email validation
+  function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
+
+  function showEmailError(message) {
+    const existingError = emailInput.parentNode.querySelector('.email-error')
+    if (existingError) {
+      existingError.remove()
+    }
+    
+    const errorDiv = document.createElement('div')
+    errorDiv.className = 'email-error'
+    errorDiv.textContent = message
+    emailInput.parentNode.appendChild(errorDiv)
+    emailInput.classList.add('invalid')
+  }
+
+  function clearEmailError() {
+    const existingError = emailInput.parentNode.querySelector('.email-error')
+    if (existingError) {
+      existingError.remove()
+    }
+    emailInput.classList.remove('invalid')
+    emailInput.classList.add('valid')
+  }
+
+  // Email validation on input
+  emailInput.addEventListener('input', (e) => {
+    const email = e.target.value.trim()
+    
+    if (email === '') {
+      emailInput.classList.remove('valid', 'invalid')
+      const existingError = emailInput.parentNode.querySelector('.email-error')
+      if (existingError) {
+        existingError.remove()
+      }
+      return
+    }
+    
+    if (validateEmail(email)) {
+      clearEmailError()
+    } else {
+      showEmailError('Por favor, digite um e-mail válido')
+    }
+  })
+
+  // Email validation on blur
+  emailInput.addEventListener('blur', (e) => {
+    const email = e.target.value.trim()
+    
+    if (email !== '' && !validateEmail(email)) {
+      showEmailError('Por favor, digite um e-mail válido')
+    }
+  })
+
+  // Phone validation functions
+  function validatePhone(phone) {
+    const digitsOnly = phone.replace(/\D/g, '')
+    return digitsOnly.length >= 10 && digitsOnly.length <= 11
+  }
+
+  function showPhoneError(message) {
+    const existingError = phoneInput.parentNode.querySelector('.phone-error')
+    if (existingError) {
+      existingError.remove()
+    }
+    
+    const errorDiv = document.createElement('div')
+    errorDiv.className = 'phone-error'
+    errorDiv.textContent = message
+    phoneInput.parentNode.appendChild(errorDiv)
+    phoneInput.classList.add('invalid')
+  }
+
+  function clearPhoneError() {
+    const existingError = phoneInput.parentNode.querySelector('.phone-error')
+    if (existingError) {
+      existingError.remove()
+    }
+    phoneInput.classList.remove('invalid')
+    phoneInput.classList.add('valid')
+  }
 
   // Phone mask - limit to Brazilian format
   phoneInput.addEventListener("input", (e) => {
@@ -73,8 +159,35 @@ function initFormHandling() {
       value = value.replace(/(\d{2})(\d{0,5})/, "($1) $2")
     }
     e.target.value = value
+    
+    // Validate phone length
+    const digitsOnly = value.replace(/\D/g, '')
+    
+    if (digitsOnly === '') {
+      phoneInput.classList.remove('valid', 'invalid')
+      const existingError = phoneInput.parentNode.querySelector('.phone-error')
+      if (existingError) {
+        existingError.remove()
+      }
+      return
+    }
+    
+    if (validatePhone(value)) {
+      clearPhoneError()
+    } else if (digitsOnly.length < 10) {
+      showPhoneError('Telefone deve ter pelo menos 10 dígitos')
+    }
   })
   
+  // Phone validation on blur
+  phoneInput.addEventListener('blur', (e) => {
+    const phone = e.target.value.trim()
+    
+    if (phone !== '' && !validatePhone(phone)) {
+      showPhoneError('Telefone deve ter pelo menos 10 dígitos')
+    }
+  })
+
   // Instagram mask - ensure @ at beginning
   instagramInput.addEventListener("input", (e) => {
     let value = e.target.value
@@ -100,6 +213,22 @@ function initFormHandling() {
   // Form submission
   form.addEventListener("submit", async (e) => {
     e.preventDefault()
+
+    // Validate email before submission
+    const email = emailInput.value.trim()
+    if (!validateEmail(email)) {
+      showEmailError('Por favor, digite um e-mail válido antes de enviar')
+      emailInput.focus()
+      return
+    }
+
+    // Validate phone before submission
+    const phone = phoneInput.value.trim()
+    if (!validatePhone(phone)) {
+      showPhoneError('Por favor, digite um telefone válido com pelo menos 10 dígitos')
+      phoneInput.focus()
+      return
+    }
 
     const formData = new FormData(form)
     const data = Object.fromEntries(formData)
